@@ -18,7 +18,7 @@ def scrape_jobs():
 
             page.goto(url, timeout=10000)
 
-            # ✅ Wait for job cards, NOT network idle
+            # Wait for job cards, NOT network idle
             try:
                 page.wait_for_selector(
                     'a[data-ph-at-id="job-link"]',
