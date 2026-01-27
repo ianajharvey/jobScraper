@@ -33,9 +33,6 @@ filtered_df = df[df['title'].str.contains(pattern, case=False, regex=True)].rese
 
 filtered_df['key'] = filtered_df['title'] + '||' + filtered_df['link'] + '||' + filtered_df['company']
 
-# Save to CSV
-filtered_df.to_csv("data/all_filtered_jobs.csv", index=False)
-
-send_email()
+send_email(filtered_df)
 
 print(filtered_df)

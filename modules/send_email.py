@@ -9,12 +9,11 @@ from email.mime.multipart import MIMEMultipart
 
 BASE_DIR = Path(__file__).resolve().parents[1]   # jobScraper/
 DATA_DIR = BASE_DIR / "data"
-
-ALL_JOBS_FILE = DATA_DIR / "all_filtered_jobs.csv"
 SEEN_JOBS_FILE = DATA_DIR / "seen_jobs.csv"
 
 
-def send_email():
+def send_email(all_jobs_df: pd.DataFrame):
+    # --- Email config ---
     SMTP_HOST = os.getenv("JOBSCRAPER_SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT = int(os.getenv("JOBSCRAPER_SMTP_PORT", 465))
 
@@ -25,26 +24,30 @@ def send_email():
     if not EMAIL_USERNAME or not EMAIL_PASSWORD:
         raise ValueError("Missing email environment variables")
 
-    if not ALL_JOBS_FILE.exists():
-        print("No job file found — skipping email.")
+    if all_jobs_df.empty:
+        print("No jobs collected — skipping email.")
         return
 
-    now = time.localtime()
-    email_date = time.strftime("%A, %b %d %Y", now)
+    if "key" not in all_jobs_df.columns:
+        raise ValueError("Expected 'key' column missing from all_jobs_df")
 
-    jobs_df = pd.read_csv(ALL_JOBS_FILE)
+    # --- Date ---
+    email_date = time.strftime("%A, %b %d %Y", time.localtime())
 
+    # --- Load seen jobs ---
     if SEEN_JOBS_FILE.exists():
         seen_df = pd.read_csv(SEEN_JOBS_FILE)
     else:
-        seen_df = pd.DataFrame(columns=jobs_df.columns)
+        seen_df = pd.DataFrame(columns=all_jobs_df.columns)
 
-    new_jobs_df = jobs_df[~jobs_df["key"].isin(seen_df["key"])]
+    # --- Filter new jobs ---
+    new_jobs_df = all_jobs_df[~all_jobs_df["key"].isin(seen_df["key"])]
 
     if new_jobs_df.empty:
         print("No new jobs to email.")
         return
 
+    # --- Build email ---
     html_table = new_jobs_df.to_html(index=False, escape=False)
 
     msg = MIMEMultipart("alternative")
@@ -61,11 +64,13 @@ def send_email():
     </html>
     """, "html"))
 
+    # --- Send ---
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
         server.sendmail(EMAIL_USERNAME, EMAIL_RECEIVER, msg.as_string())
 
+    print(f"Emailed {len(new_jobs_df)} new jobs!")
+
+    # --- Persist seen jobs ---
     updated_seen = pd.concat([seen_df, new_jobs_df], ignore_index=True)
     updated_seen.to_csv(SEEN_JOBS_FILE, index=False)
-
-    print(f"Emailed {len(new_jobs_df)} new jobs!")
