@@ -1,7 +1,7 @@
 import pandas as pd
 import importlib
 import os
-from send_email import send_email
+from modules.send_email import send_email
 
 COMPANIES_FOLDER = "companies"
 

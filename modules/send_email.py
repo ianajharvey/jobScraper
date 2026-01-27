@@ -23,10 +23,10 @@ def send_email():
     email_date = time.strftime("%A, %b %d %Y", now)
 
     # --- Load scraped jobs ---
-    jobs_df = pd.read_csv("data/all_filtered_jobs.csv")
+    jobs_df = pd.read_csv("../data/all_filtered_jobs.csv")
 
     # --- Load previously seen jobs ---
-    seen_file = "data/seen_jobs.csv"
+    seen_file = "../data/seen_jobs.csv"
     if os.path.exists(seen_file):
         seen_df = pd.read_csv(seen_file)
     else:

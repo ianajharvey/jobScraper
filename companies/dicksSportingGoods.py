@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+from modules.headless_mode import get_headless_mode
 
 BASE_URL = "https://www.dickssportinggoods.jobs"
 
@@ -7,7 +8,7 @@ def scrape_jobs():
     page_num = 1
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=get_headless_mode())
         page = browser.new_page()
 
         while True:

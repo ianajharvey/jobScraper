@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+from modules.headless_mode import get_headless_mode
 
 BASE_URL = "https://careers.chewy.com"
 SEARCH_URL = BASE_URL + "/us/en/search-results"
@@ -7,7 +8,7 @@ def scrape_jobs():
     jobs = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=get_headless_mode())
         page = browser.new_page()
 
         offset = 0
