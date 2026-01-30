@@ -15,7 +15,6 @@ def scrape_jobs():
 
         while True:
             url = f"{SEARCH_URL}?from={offset}&s=1"
-            print(f"Scraping Chewy: {url}")
 
             page.goto(url, timeout=10000)
 
@@ -26,12 +25,10 @@ def scrape_jobs():
                     timeout=60000
                 )
             except:
-                print("No jobs found — stopping pagination")
                 break
 
             job_cards = page.locator('a[data-ph-at-id="job-link"]')
             count = job_cards.count()
-            print(f"Found {count} jobs")
 
             if count == 0:
                 break

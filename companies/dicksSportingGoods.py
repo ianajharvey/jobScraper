@@ -13,7 +13,6 @@ def scrape_jobs():
 
         while True:
             url = f"{BASE_URL}/calc-results/?filter[brand]=Corporate&mypage={page_num}"
-            print(f"Scraping Dicks: page {page_num}")
 
             page.goto(url, timeout=10000)
             page.wait_for_load_state("domcontentloaded")
@@ -23,7 +22,6 @@ def scrape_jobs():
 
             # ✅ End pagination cleanly
             if count == 0:
-                print("No more jobs found — stopping pagination.")
                 break
 
             for i in range(count):
