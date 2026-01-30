@@ -28,9 +28,9 @@ jobs:
       # 🔐 Create Google service account file from secret
       - name: Write Google credentials file
         run: |
-          echo "$JOBSCRAPER_GOOGLE_CREDS_JSON" > gsheet_creds.json
+          echo "$JOBSCRAPER_GOOGLE_CRED_JSON" > gsheet_creds.json
         env:
-          JOBSCRAPER_GOOGLE_CREDS_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CREDS_JSON }}
+          JOBSCRAPER_GOOGLE_CREDS_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_JSON }}
 
       - name: Run scraper
         run: |
