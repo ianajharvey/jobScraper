@@ -7,15 +7,6 @@ jobs:
   run-scraper:
     runs-on: ubuntu-latest
 
-    env:
-      JOBSCRAPER_EMAIL_USERNAME: ${{ secrets.JOBSCRAPER_EMAIL_USERNAME }}
-      JOBSCRAPER_EMAIL_PASSWORD: ${{ secrets.JOBSCRAPER_EMAIL_PASSWORD }}
-      JOBSCRAPER_EMAIL_RECEIVER: ${{ secrets.JOBSCRAPER_EMAIL_RECEIVER }}
-      JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
-      JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
-      JOBSCRAPER_GOOGLE_CRED_PATH: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_PATH }}
-      JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,6 +25,21 @@ jobs:
         run: |
           playwright install chromium
 
+      # 🔐 Create Google service account file from secret
+      - name: Write Google credentials file
+        run: |
+          echo "$JOBSCRAPER_GOOGLE_CREDS_JSON" > gsheet_creds.json
+        env:
+          JOBSCRAPER_GOOGLE_CREDS_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CREDS_JSON }}
+
       - name: Run scraper
         run: |
           python main.py
+        env:
+          JOBSCRAPER_EMAIL_USERNAME: ${{ secrets.JOBSCRAPER_EMAIL_USERNAME }}
+          JOBSCRAPER_EMAIL_PASSWORD: ${{ secrets.JOBSCRAPER_EMAIL_PASSWORD }}
+          JOBSCRAPER_EMAIL_RECEIVER: ${{ secrets.JOBSCRAPER_EMAIL_RECEIVER }}
+          JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
+          JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
+          JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
+          JOBSCRAPER_GOOGLE_CREDS_PATH: gsheet_creds.json
