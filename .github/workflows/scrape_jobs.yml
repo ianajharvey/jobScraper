@@ -13,6 +13,8 @@ jobs:
       JOBSCRAPER_EMAIL_RECEIVER: ${{ secrets.JOBSCRAPER_EMAIL_RECEIVER }}
       JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
       JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
+      JOBSCRAPER_GOOGLE_CRED_PATH: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_PATH }}
+      JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
 
     steps:
       - name: Check out repository
