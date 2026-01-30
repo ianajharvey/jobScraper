@@ -1,28 +1,28 @@
-from pathlib import Path
 import smtplib
 import time
 import pandas as pd
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
-
-BASE_DIR = Path(__file__).resolve().parents[1]   # jobScraper/
-DATA_DIR = BASE_DIR / "data"
-SEEN_JOBS_FILE = DATA_DIR / "seen_jobs.csv"
+from modules.get_google_sheet import load_seen_jobs, append_seen_jobs
 
 
 def send_email(all_jobs_df: pd.DataFrame):
     # --- Email config ---
-    SMTP_HOST = os.getenv("JOBSCRAPER_SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT = int(os.getenv("JOBSCRAPER_SMTP_PORT", 465))
+    smtp_host = os.getenv("JOBSCRAPER_SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.getenv("JOBSCRAPER_SMTP_PORT", 465))
 
-    EMAIL_USERNAME = os.getenv("JOBSCRAPER_EMAIL_USERNAME")
-    EMAIL_PASSWORD = os.getenv("JOBSCRAPER_EMAIL_PASSWORD")
-    EMAIL_RECEIVER = os.getenv("JOBSCRAPER_EMAIL_RECEIVER", EMAIL_USERNAME)
+    email_username = os.getenv("JOBSCRAPER_EMAIL_USERNAME")
+    email_password = os.getenv("JOBSCRAPER_EMAIL_PASSWORD")
+    email_receiver = os.getenv("JOBSCRAPER_EMAIL_RECEIVER", email_username)
 
-    if not EMAIL_USERNAME or not EMAIL_PASSWORD:
+    sheet_id = os.getenv("JOBSCRAPER_GSHEET_ID")
+
+    if not email_username or not email_password:
         raise ValueError("Missing email environment variables")
+
+    if not sheet_id:
+        raise ValueError("Missing JOBSCRAPER_GSHEET_ID")
 
     if all_jobs_df.empty:
         print("No jobs collected — skipping email.")
@@ -34,14 +34,18 @@ def send_email(all_jobs_df: pd.DataFrame):
     # --- Date ---
     email_date = time.strftime("%A, %b %d %Y", time.localtime())
 
-    # --- Load seen jobs ---
-    if SEEN_JOBS_FILE.exists():
-        seen_df = pd.read_csv(SEEN_JOBS_FILE)
-    else:
-        seen_df = pd.DataFrame(columns=all_jobs_df.columns)
+    # --- Load seen jobs from Google Sheets ---
+    seen_df = load_seen_jobs(sheet_id)
+
+    if not seen_df.empty and "key" not in seen_df.columns:
+        raise ValueError("'key' column missing in seen_jobs sheet")
 
     # --- Filter new jobs ---
-    new_jobs_df = all_jobs_df[~all_jobs_df["key"].isin(seen_df["key"])]
+    new_jobs_df = (
+        all_jobs_df
+        if seen_df.empty
+        else all_jobs_df[~all_jobs_df["key"].isin(seen_df["key"])]
+    )
 
     if new_jobs_df.empty:
         print("No new jobs to email.")
@@ -52,8 +56,8 @@ def send_email(all_jobs_df: pd.DataFrame):
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"{email_date} New Job Listings ({len(new_jobs_df)})"
-    msg["From"] = EMAIL_USERNAME
-    msg["To"] = EMAIL_RECEIVER
+    msg["From"] = email_username
+    msg["To"] = email_receiver
 
     msg.attach(MIMEText(f"""
     <html>
@@ -65,12 +69,11 @@ def send_email(all_jobs_df: pd.DataFrame):
     """, "html"))
 
     # --- Send ---
-    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
-        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_USERNAME, EMAIL_RECEIVER, msg.as_string())
+    with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+        server.login(email_username, email_password)
+        server.sendmail(email_username, email_receiver, msg.as_string())
 
     print(f"Emailed {len(new_jobs_df)} new jobs!")
 
-    # --- Persist seen jobs ---
-    updated_seen = pd.concat([seen_df, new_jobs_df], ignore_index=True)
-    updated_seen.to_csv(SEEN_JOBS_FILE, index=False)
+    # --- Persist seen jobs to Google Sheets ---
+    append_seen_jobs(new_jobs_df, sheet_id)
