@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "$JOBSCRAPER_GOOGLE_CRED_JSON" > gsheet_creds.json
         env:
-          JOBSCRAPER_GOOGLE_CREDS_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_JSON }}
+          JOBSCRAPER_GOOGLE_CRED_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_JSON }}
 
       - name: Run scraper
         run: |
@@ -42,4 +42,4 @@ jobs:
           JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
           JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
           JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
-          JOBSCRAPER_GOOGLE_CREDS_PATH: gsheet_creds.json
+          JOBSCRAPER_GOOGLE_CRED_PATH: gsheet_creds.json
