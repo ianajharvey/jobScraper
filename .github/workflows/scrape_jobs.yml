@@ -25,10 +25,10 @@ jobs:
         run: |
           playwright install chromium
 
-      # 🔐 Create Google service account file from secret
+      # 🔐 Create Google service account file from secret (SAFE for multiline JSON)
       - name: Write Google credentials file
         run: |
-          echo "$JOBSCRAPER_GOOGLE_CRED_JSON" > gsheet_creds.json
+          printf '%s' "$JOBSCRAPER_GOOGLE_CRED_JSON" > gsheet_creds.json
         env:
           JOBSCRAPER_GOOGLE_CRED_JSON: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_JSON }}
 
