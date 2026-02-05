@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 from modules.headless_mode import get_headless_mode
 
 def scrape_jobs():
-    BASE_URL = "https://careers.draftkings.com/"
+    BASE_URL = "https://careers.draftkings.com"
     START_URL = BASE_URL + "/jobs/"
 
     job_list = []
