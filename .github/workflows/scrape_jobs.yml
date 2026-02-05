@@ -2,19 +2,16 @@ name: Job Scraper
 
 on:
   workflow_dispatch:
+  schedule:
+    # 9:00 AM Eastern (14:00 UTC)
+    - cron: "0 14 * * 1-5"
+    # 3:00 PM Eastern (20:00 UTC)
+    - cron: "0 20 * * 1-5"
+
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-
-    env:
-      JOBSCRAPER_EMAIL_USERNAME: ${{ secrets.JOBSCRAPER_EMAIL_USERNAME }}
-      JOBSCRAPER_EMAIL_PASSWORD: ${{ secrets.JOBSCRAPER_EMAIL_PASSWORD }}
-      JOBSCRAPER_EMAIL_RECEIVER: ${{ secrets.JOBSCRAPER_EMAIL_RECEIVER }}
-      JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
-      JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
-      JOBSCRAPER_GOOGLE_CRED_PATH: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_PATH }}
-      JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
 
     steps:
       - name: Check out repository
@@ -34,6 +31,21 @@ jobs:
         run: |
           playwright install chromium
 
+      # 🔐 Decode Google service account credentials (Base64 → JSON file)
+      - name: Decode Google credentials
+        run: |
+          echo "$JOBSCRAPER_GOOGLE_CRED_B64" | base64 --decode > gsheet_creds.json
+        env:
+          JOBSCRAPER_GOOGLE_CRED_B64: ${{ secrets.JOBSCRAPER_GOOGLE_CRED_B64 }}
+
       - name: Run scraper
         run: |
           python main.py
+        env:
+          JOBSCRAPER_EMAIL_USERNAME: ${{ secrets.JOBSCRAPER_EMAIL_USERNAME }}
+          JOBSCRAPER_EMAIL_PASSWORD: ${{ secrets.JOBSCRAPER_EMAIL_PASSWORD }}
+          JOBSCRAPER_EMAIL_RECEIVER: ${{ secrets.JOBSCRAPER_EMAIL_RECEIVER }}
+          JOBSCRAPER_SMTP_HOST: ${{ secrets.JOBSCRAPER_SMTP_HOST }}
+          JOBSCRAPER_SMTP_PORT: ${{ secrets.JOBSCRAPER_SMTP_PORT }}
+          JOBSCRAPER_GSHEET_ID: ${{ secrets.JOBSCRAPER_GSHEET_ID }}
+          JOBSCRAPER_GOOGLE_CRED_PATH: gsheet_creds.json
